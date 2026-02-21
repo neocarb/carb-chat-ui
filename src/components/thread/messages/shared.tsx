@@ -24,7 +24,18 @@ function ContentCopyable({
 
   const handleCopy = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(content);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(content);
+    } else {
+      const el = document.createElement("textarea");
+      el.value = content;
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

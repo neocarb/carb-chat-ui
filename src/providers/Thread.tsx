@@ -10,6 +10,7 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+import { useSession } from "next-auth/react";
 import { createClient } from "./client";
 
 interface ThreadContextType {
@@ -28,17 +29,20 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   });
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
+  const { data: session } = useSession();
+  const userId = session?.user_id;
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
-    if (!apiUrl) return [];
+    if (!apiUrl || !userId) return [];
     const client = createClient(apiUrl, getApiKey() ?? undefined);
 
     const threads = await client.threads.search({
       limit: 100,
+      metadata: { user_id: userId },
     });
 
     return threads;
-  }, [apiUrl]);
+  }, [apiUrl, userId]);
 
   const value = {
     getThreads,

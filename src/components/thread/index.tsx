@@ -47,6 +47,8 @@ import {
 } from "./artifact";
 import { AgentSelector } from "./agent-selector";
 import { contentBlockToLangChain } from "@/lib/multimodal-utils";
+import { useSession, signOut } from "next-auth/react";
+import { LogOut } from "lucide-react";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -114,6 +116,9 @@ function OpenGitHubRepo() {
 }
 
 export function Thread() {
+  const { data: session } = useSession();
+  const userId = session?.user_id;
+
   const [artifactContext, setArtifactContext] = useArtifactContext();
   const [artifactOpen, closeArtifact] = useArtifactOpen();
 
@@ -227,6 +232,7 @@ export function Thread() {
         streamMode: ["values"],
         streamSubgraphs: true,
         streamResumable: true,
+        ...(userId ? { metadata: { user_id: userId } } : {}),
         optimisticValues: (prev) => ({
           ...prev,
           context,
@@ -254,6 +260,7 @@ export function Thread() {
       streamMode: ["values"],
       streamSubgraphs: true,
       streamResumable: true,
+      ...(userId ? { metadata: { user_id: userId } } : {}),
     });
   };
 
@@ -332,8 +339,28 @@ export function Thread() {
                   </Button>
                 )}
               </div>
-              <div className="absolute top-2 right-4 flex items-center">
+              <div className="absolute top-2 right-4 flex items-center gap-2">
                 <OpenGitHubRepo />
+                {session?.user && (
+                  <div className="flex items-center gap-2">
+                    {session.user.image && (
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name ?? "User"}
+                        className="h-7 w-7 rounded-full"
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
+                    <TooltipIconButton
+                      size="sm"
+                      tooltip="Sign out"
+                      variant="ghost"
+                      onClick={() => signOut()}
+                    >
+                      <LogOut className="size-4" />
+                    </TooltipIconButton>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -390,6 +417,26 @@ export function Thread() {
                 >
                   <SquarePen className="size-5" />
                 </TooltipIconButton>
+                {session?.user && (
+                  <div className="flex items-center gap-2">
+                    {session.user.image && (
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name ?? "User"}
+                        className="h-7 w-7 rounded-full"
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
+                    <TooltipIconButton
+                      size="sm"
+                      tooltip="Sign out"
+                      variant="ghost"
+                      onClick={() => signOut()}
+                    >
+                      <LogOut className="size-4" />
+                    </TooltipIconButton>
+                  </div>
+                )}
               </div>
 
               <div className="from-background to-background/0 absolute inset-x-0 top-full h-5 bg-gradient-to-b" />

@@ -54,30 +54,83 @@ export async function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// Type guard for Base64ContentBlock
+/**
+ * Helper to read mime type from a block that may use either JS SDK format
+ * (mimeType) or LangChain Python format (mime_type).
+ */
+function getBlockMimeType(block: Record<string, unknown>): string | undefined {
+  const val =
+    (block as { mimeType?: unknown }).mimeType ??
+    (block as { mime_type?: unknown }).mime_type;
+  return typeof val === "string" ? val : undefined;
+}
+
+/**
+ * Helper to read base64 data from a block that may use either JS SDK format
+ * (data) or LangChain Python format (base64).
+ */
+function getBlockData(
+  block: Record<string, unknown>,
+): string | Uint8Array | undefined {
+  const val =
+    (block as { data?: unknown }).data ??
+    (block as { base64?: unknown }).base64;
+  return typeof val === "string" || val instanceof Uint8Array ? val : undefined;
+}
+
+// Type guard for Base64ContentBlock — accepts both JS SDK (mimeType/data)
+// and LangChain Python (mime_type/base64) formats.
 export function isBase64ContentBlock(
   block: unknown,
 ): block is ContentBlock.Multimodal.Data {
   if (typeof block !== "object" || block === null || !("type" in block))
     return false;
-  // file type (legacy)
-  if (
-    (block as { type: unknown }).type === "file" &&
-    "mimeType" in block &&
-    typeof (block as { mimeType?: unknown }).mimeType === "string" &&
-    ((block as { mimeType: string }).mimeType.startsWith("image/") ||
-      (block as { mimeType: string }).mimeType === "application/pdf")
-  ) {
-    return true;
-  }
-  // image type (new)
-  if (
-    (block as { type: unknown }).type === "image" &&
-    "mimeType" in block &&
-    typeof (block as { mimeType?: unknown }).mimeType === "string" &&
-    (block as { mimeType: string }).mimeType.startsWith("image/")
-  ) {
-    return true;
-  }
+  const b = block as Record<string, unknown>;
+  const mime = getBlockMimeType(b);
+  if (!mime) return false;
+  if (b.type === "file" && (mime.startsWith("image/") || mime === "application/pdf")) return true;
+  if (b.type === "image" && mime.startsWith("image/")) return true;
   return false;
+}
+
+/**
+ * Normalize a content block from either format (JS SDK or LangChain Python)
+ * into the JS SDK format used by our UI components (mimeType/data).
+ */
+export function normalizeContentBlock(
+  block: Record<string, unknown>,
+): ContentBlock.Multimodal.Data {
+  const mime = getBlockMimeType(block);
+  const data = getBlockData(block);
+  return {
+    ...block,
+    mimeType: mime,
+    data: data,
+  } as unknown as ContentBlock.Multimodal.Data;
+}
+
+/**
+ * Convert SDK-typed content blocks to the format LangChain Python expects.
+ * Maps: mimeType → mime_type, data → base64
+ */
+export function contentBlockToLangChain(
+  block: ContentBlock.Multimodal.Data,
+): Record<string, unknown> {
+  if (block.type === "image") {
+    return {
+      type: "image",
+      mime_type: block.mimeType,
+      base64: block.data,
+      ...(block.metadata ? { metadata: block.metadata } : {}),
+    };
+  }
+  if (block.type === "file") {
+    return {
+      type: "file",
+      mime_type: block.mimeType,
+      base64: block.data,
+      ...(block.metadata ? { metadata: block.metadata } : {}),
+    };
+  }
+  return block as unknown as Record<string, unknown>;
 }

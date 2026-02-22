@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MultimodalPreview } from "@/components/thread/MultimodalPreview";
-import { isBase64ContentBlock } from "@/lib/multimodal-utils";
+import {
+  isBase64ContentBlock,
+  normalizeContentBlock,
+} from "@/lib/multimodal-utils";
 
 function EditableContent({
   value,
@@ -98,7 +101,9 @@ export function HumanMessage({
                       acc.push(
                         <MultimodalPreview
                           key={idx}
-                          block={block}
+                          block={normalizeContentBlock(
+                            block as unknown as Record<string, unknown>,
+                          )}
                           size="md"
                         />,
                       );

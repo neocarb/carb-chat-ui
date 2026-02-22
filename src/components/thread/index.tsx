@@ -46,6 +46,7 @@ import {
   useArtifactContext,
 } from "./artifact";
 import { AgentSelector } from "./agent-selector";
+import { contentBlockToLangChain } from "@/lib/multimodal-utils";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -201,12 +202,17 @@ export function Thread() {
       return;
     setFirstTokenReceived(false);
 
+    // Map content blocks to LangChain Python format (mime_type, base64)
+    const mappedBlocks = contentBlocks.map((block) =>
+      contentBlockToLangChain(block),
+    );
+
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
       content: [
         ...(input.trim().length > 0 ? [{ type: "text", text: input }] : []),
-        ...contentBlocks,
+        ...mappedBlocks,
       ] as Message["content"],
     };
 

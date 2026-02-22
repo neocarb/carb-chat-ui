@@ -39,7 +39,11 @@ const useTypedStream = useStream<
   }
 >;
 
-type StreamContextType = ReturnType<typeof useTypedStream>;
+type StreamContextType = ReturnType<typeof useTypedStream> & {
+  assistantId: string;
+  setAssistantId: (id: string) => void;
+  availableAgents: string[];
+};
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 async function sleep(ms = 4000) {
@@ -71,11 +75,15 @@ const StreamSession = ({
   apiKey,
   apiUrl,
   assistantId,
+  setAssistantId,
+  availableAgents,
 }: {
   children: ReactNode;
   apiKey: string | null;
   apiUrl: string;
   assistantId: string;
+  setAssistantId: (id: string) => void;
+  availableAgents: string[];
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
   const { getThreads, setThreads } = useThreads();
@@ -119,8 +127,15 @@ const StreamSession = ({
     });
   }, [apiKey, apiUrl]);
 
+  const contextValue: StreamContextType = {
+    ...streamValue,
+    assistantId,
+    setAssistantId,
+    availableAgents,
+  };
+
   return (
-    <StreamContext.Provider value={streamValue}>
+    <StreamContext.Provider value={contextValue}>
       {children}
     </StreamContext.Provider>
   );
@@ -137,6 +152,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const envApiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
   const envAssistantId: string | undefined =
     process.env.NEXT_PUBLIC_ASSISTANT_ID;
+  const envAvailableAgents: string | undefined =
+    process.env.NEXT_PUBLIC_AVAILABLE_AGENTS;
 
   // Use URL params with env var fallbacks
   const [apiUrl, setApiUrl] = useQueryState("apiUrl", {
@@ -160,6 +177,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // Determine final values to use, prioritizing URL params then env vars
   const finalApiUrl = apiUrl || envApiUrl;
   const finalAssistantId = assistantId || envAssistantId;
+
+  // Parse available agents from env var, fall back to just the current assistantId
+  const availableAgents = envAvailableAgents
+    ? envAvailableAgents.split(",").map((s) => s.trim()).filter(Boolean)
+    : finalAssistantId
+      ? [finalAssistantId]
+      : [];
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
   if (!finalApiUrl || !finalAssistantId) {
@@ -268,6 +292,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       apiKey={apiKey}
       apiUrl={apiUrl}
       assistantId={assistantId}
+      setAssistantId={setAssistantId}
+      availableAgents={availableAgents}
     >
       {children}
     </StreamSession>

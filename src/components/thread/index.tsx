@@ -45,6 +45,7 @@ import {
   ArtifactTitle,
   useArtifactContext,
 } from "./artifact";
+import { AgentSelector } from "./agent-selector";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -516,6 +517,7 @@ export function Thread() {
                           accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
                           className="hidden"
                         />
+                        <AgentSelector />
                         {stream.isLoading ? (
                           <Button
                             key="stop"

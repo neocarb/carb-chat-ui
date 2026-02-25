@@ -3,8 +3,11 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   if (!req.auth) {
+    // Strip threadId from callback URL so a new user doesn't inherit a previous user's thread
+    const callbackUrl = new URL(req.url);
+    callbackUrl.searchParams.delete("threadId");
     const signInUrl = new URL("/api/auth/signin", req.url);
-    signInUrl.searchParams.set("callbackUrl", req.url);
+    signInUrl.searchParams.set("callbackUrl", callbackUrl.toString());
     return NextResponse.redirect(signInUrl);
   }
 });

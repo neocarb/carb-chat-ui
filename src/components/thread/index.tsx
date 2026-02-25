@@ -355,7 +355,7 @@ export function Thread() {
                       size="sm"
                       tooltip="Sign out"
                       variant="ghost"
-                      onClick={() => signOut()}
+                      onClick={() => signOut({ callbackUrl: "/" })}
                     >
                       <LogOut className="size-4" />
                     </TooltipIconButton>
@@ -431,7 +431,7 @@ export function Thread() {
                       size="sm"
                       tooltip="Sign out"
                       variant="ghost"
-                      onClick={() => signOut()}
+                      onClick={() => signOut({ callbackUrl: "/" })}
                     >
                       <LogOut className="size-4" />
                     </TooltipIconButton>

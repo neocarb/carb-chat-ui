@@ -4,7 +4,7 @@ import { Thread } from "@langchain/langgraph-sdk";
 import { useEffect } from "react";
 
 import { getContentString } from "../utils";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { useQueryState, parseAsBoolean, parseAsString } from "nuqs";
 import {
   Sheet,
   SheetContent,
@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PanelRightOpen, PanelRightClose, DollarSign } from "lucide-react";
+import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 function ThreadList({
@@ -82,17 +82,19 @@ export default function ThreadHistory() {
     parseAsBoolean.withDefault(false),
   );
 
+  const [activeTab] = useQueryState("tab", parseAsString.withDefault("chat"));
+
   const { getThreads, threads, setThreads, threadsLoading, setThreadsLoading } =
     useThreads();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setThreadsLoading(true);
-    getThreads()
+    getThreads(activeTab)
       .then(setThreads)
       .catch(console.error)
       .finally(() => setThreadsLoading(false));
-  }, [getThreads]);
+  }, [getThreads, activeTab]);
 
   return (
     <>
@@ -110,19 +112,6 @@ export default function ThreadHistory() {
             )}
           </Button>
         </div>
-
-        {/* Finance section */}
-        <div className="flex w-full flex-col px-2 py-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2 font-normal"
-          >
-            <DollarSign className="size-4" />
-            Finance
-          </Button>
-        </div>
-
-        <div className="mx-3 w-[calc(100%-24px)] border-t border-border" />
 
         {/* Thread History section */}
         <div className="flex w-full flex-col gap-2 py-2 min-h-0 flex-1 overflow-hidden">
@@ -153,19 +142,6 @@ export default function ThreadHistory() {
             <SheetHeader>
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>
-
-            {/* Finance section */}
-            <div className="flex w-full flex-col py-2">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 font-normal"
-              >
-                <DollarSign className="size-4" />
-                Finance
-              </Button>
-            </div>
-
-            <div className="w-full border-t border-border" />
 
             {/* Thread History section */}
             <div className="flex flex-col gap-2 py-2 min-h-0 flex-1 overflow-hidden">

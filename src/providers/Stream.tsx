@@ -86,6 +86,7 @@ const StreamSession = ({
   availableAgents: string[];
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
+  const [activeTab] = useQueryState("tab", { defaultValue: "chat" });
   const { getThreads, setThreads } = useThreads();
   const streamValue = useTypedStream({
     apiUrl,
@@ -105,7 +106,7 @@ const StreamSession = ({
       setThreadId(id);
       // Refetch threads list when thread ID changes.
       // Wait for some seconds before fetching so we're able to get the new thread that was created.
-      sleep().then(() => getThreads().then(setThreads).catch(console.error));
+      sleep().then(() => getThreads(activeTab).then(setThreads).catch(console.error));
     },
   });
 

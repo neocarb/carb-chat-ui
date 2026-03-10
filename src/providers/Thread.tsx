@@ -14,7 +14,7 @@ import { useSession } from "next-auth/react";
 import { createClient } from "./client";
 
 interface ThreadContextType {
-  getThreads: () => Promise<Thread[]>;
+  getThreads: (tab?: string) => Promise<Thread[]>;
   threads: Thread[];
   setThreads: Dispatch<SetStateAction<Thread[]>>;
   threadsLoading: boolean;
@@ -32,13 +32,13 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const userId = session?.user_id;
 
-  const getThreads = useCallback(async (): Promise<Thread[]> => {
+  const getThreads = useCallback(async (tab?: string): Promise<Thread[]> => {
     if (!apiUrl || !userId) return [];
     const client = createClient(apiUrl, getApiKey() ?? undefined);
 
     const threads = await client.threads.search({
       limit: 100,
-      metadata: { user_id: userId },
+      metadata: { user_id: userId, ...(tab ? { tab } : {}) },
     });
 
     return threads;

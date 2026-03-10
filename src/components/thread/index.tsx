@@ -15,14 +15,16 @@ import {
 import { TooltipIconButton } from "./tooltip-icon-button";
 import {
   ArrowDown,
+  DollarSign,
   LoaderCircle,
+  MessageSquare,
   PanelRightOpen,
   PanelRightClose,
   SquarePen,
   XIcon,
   Plus,
 } from "lucide-react";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { useQueryState, parseAsBoolean, parseAsString } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
 import { toast } from "sonner";
@@ -130,6 +132,15 @@ export function Thread() {
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
   );
+  const [activeTab, _setActiveTab] = useQueryState(
+    "tab",
+    parseAsString.withDefault("chat"),
+  );
+  const switchTab = (tab: string) => {
+    if (tab === activeTab) return;
+    _setActiveTab(tab);
+    setThreadId(null);
+  };
   const [input, setInput] = useState("");
   const {
     contentBlocks,
@@ -231,7 +242,7 @@ export function Thread() {
         streamMode: ["values"],
         streamSubgraphs: true,
         streamResumable: true,
-        ...(userId ? { metadata: { user_id: userId } } : {}),
+        ...(userId ? { metadata: { user_id: userId, tab: activeTab } } : { metadata: { tab: activeTab } }),
         optimisticValues: (prev) => ({
           ...prev,
           context,
@@ -259,7 +270,7 @@ export function Thread() {
       streamMode: ["values"],
       streamSubgraphs: true,
       streamResumable: true,
-      ...(userId ? { metadata: { user_id: userId } } : {}),
+      ...(userId ? { metadata: { user_id: userId, tab: activeTab } } : { metadata: { tab: activeTab } }),
     });
   };
 
@@ -338,6 +349,35 @@ export function Thread() {
                   </Button>
                 )}
               </div>
+
+              {/* Tab switcher */}
+              <div className="absolute left-1/2 top-2 -translate-x-1/2 flex items-center rounded-lg bg-muted p-1">
+                <button
+                  onClick={() => switchTab("chat")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeTab === "chat"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <MessageSquare className="size-4" />
+                  Chat
+                </button>
+                <button
+                  onClick={() => switchTab("finance")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeTab === "finance"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <DollarSign className="size-4" />
+                  Finance
+                </button>
+              </div>
+
               <div className="absolute top-2 right-4 flex items-center gap-2">
                 <OpenGitHubRepo />
                 {session?.user && (
@@ -397,6 +437,34 @@ export function Thread() {
                     Agent Chat
                   </span>
                 </motion.button>
+              </div>
+
+              {/* Tab switcher */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center rounded-lg bg-muted p-1">
+                <button
+                  onClick={() => switchTab("chat")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeTab === "chat"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <MessageSquare className="size-4" />
+                  Chat
+                </button>
+                <button
+                  onClick={() => switchTab("finance")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeTab === "finance"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <DollarSign className="size-4" />
+                  Finance
+                </button>
               </div>
 
               <div className="flex items-center gap-4">
